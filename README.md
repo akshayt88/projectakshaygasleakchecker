@@ -1,3 +1,3 @@
 # projectakshaygasleakchecker
 import UIKit
-AudioServicesSystemSound(KSystemSoundID_Vibrate)
+AudioServicesPlaySystemSound(KSystemSoundID_Vibrate)
