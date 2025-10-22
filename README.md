@@ -1,26 +1,59 @@
-# --- Import MicroPython module for Micro:bit ---
-from microbit import *   # gives access to all pins, LED display, and timing functions
+import SwiftUI
+import CoreBluetooth
 
-# --- CONSTANTS (values that don’t change) ---
-DANGER_THRESHOLD = 300   # Adjust depending on your sensor sensitivity (0–1023)
+// The main screen for your gas detector app
+struct ContentView: View {
+    
+    // Connects the UI to the Bluetooth manager class (handles data)
+    @StateObject private var bluetoothManager = BluetoothManager()
+    
+    var body: some View {
+        VStack(spacing: 30) {
+            
+            // 🔹 HEADER
+            Text("🔥 Gas Leak Detector")
+                .font(.largeTitle)
+                .bold()
+            
+            // 🔹 CURRENT GAS LEVEL
+            VStack {
+                Text("Current Gas Level")
+                    .font(.headline)
+                Text("\(bluetoothManager.gasLevel)")  // shows latest reading
+                    .font(.system(size: 60, weight: .bold, design: .monospaced))
+                    .foregroundColor(.primary)
+            }
+            .padding()
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(15)
+            .shadow(radius: 5)
+            
+            // 🔹 STATUS MESSAGE (danger or safe)
+            Text(bluetoothManager.statusMessage)
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundColor(bluetoothManager.isDanger ? .red : .green)
+                .padding()
+                .background(bluetoothManager.isDanger ? Color.red.opacity(0.1) : Color.green.opacity(0.1))
+                .cornerRadius(10)
+            
+            // 🔹 RECONNECT BUTTON
+            Button("Reconnect") {
+                bluetoothManager.startScanning()  // try to find Micro:bit again
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Spacer()
+        }
+        .padding()
+        .onAppear {
+            // When app opens, start scanning automatically
+            bluetoothManager.startScanning()
+        }
+    }
+}
 
-# --- MAIN LOOP (runs forever) ---
-while True:
-    # 1️⃣ READ the gas sensor value from pin0 (analog signal)
-    gas_level = pin0.read_analog()  # gets a number between 0 and 1023
+// Preview for Xcode Canvas
+#Preview {
+    ContentView()
+}
 
-    # 2️⃣ PRINT the reading (you can see it in the console when connected by USB)
-    print("Gas level:", gas_level)
-
-    # 3️⃣ CHECK if the reading is above the danger threshold
-    if gas_level > DANGER_THRESHOLD:
-        # If dangerous → turn ON buzzer and show alert
-        pin1.write_digital(1)   # send power to buzzer (active buzzer)
-        display.show("!")       # show "!" on LED screen
-    else:
-        # If safe → turn OFF buzzer and show dash
-        pin1.write_digital(0)
-        display.show("-")
-
-    # 4️⃣ WAIT 2 seconds before next reading (adjust speed as needed)
-    sleep(2000)
